@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ApplyKit - New Application</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1a1a2e; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.container { width: 640px; }
+.logo { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 4px; }
+.logo span { color: #3b82f6; }
+.subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 28px; }
+.card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px; }
+.card h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.card p { font-size: 14px; color: #666; margin-bottom: 20px; }
+.tabs { display: flex; gap: 0; margin-bottom: 20px; background: #f0f2f5; border-radius: 8px; padding: 3px; }
+.tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; color: #888; }
+.tab.active { background: white; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.form-group { margin-bottom: 16px; }
+.label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
+.input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
+.input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.textarea { width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; min-height: 160px; resize: vertical; line-height: 1.6; }
+.textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.btn { padding: 12px 24px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+.btn-primary { background: #3b82f6; color: white; }
+.btn-secondary { background: #f0f2f5; color: #555; margin-top: 8px; }
+.or-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+.or-line { flex: 1; height: 1px; background: #e5e7eb; }
+.or-text { font-size: 12px; color: #999; }
+.url-input-group { display: flex; gap: 8px; }
+.url-input-group .input { flex: 1; }
+.url-input-group .btn { width: auto; padding: 10px 20px; }
+.tip { background: #eff6ff; border-radius: 8px; padding: 12px; margin-bottom: 16px; display: flex; gap: 8px; }
+.tip-icon { font-size: 16px; }
+.tip-text { font-size: 12px; color: #3b82f6; line-height: 1.5; }
+.cv-status { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.cv-check { color: #10b981; font-size: 18px; }
+.cv-info { font-size: 13px; color: #555; }
+.cv-info strong { color: #1a1a2e; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">Apply<span>Kit</span></div>
+  <div class="subtitle">Tailor your CV. Track your application. Land the job.</div>
+
+  <div class="card">
+    <h2>New Application</h2>
+    <p>Paste a job URL or description and we'll tailor your CV in seconds.</p>
+
+    <div class="cv-status">
+      <span class="cv-check">✓</span>
+      <span class="cv-info">Using base CV: <strong>alex-chen-resume-2026.pdf</strong> · <a href="#" style="color:#3b82f6;">Change</a></span>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">Paste URL</div>
+      <div class="tab">Paste Job Description</div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <span class="tip-text">Paste a link from LinkedIn, Indeed, Greenhouse, Lever, or any job board. We'll extract the job description automatically.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Job posting URL</label>
+      <div class="url-input-group">
+        <input class="input" type="url" value="https://stripe.com/jobs/listing/software-engineer-payments" placeholder="https://company.com/careers/job-id">
+        <button class="btn btn-primary" style="width:auto;white-space:nowrap;">Extract →</button>
+      </div>
+    </div>
+
+    <div class="or-divider">
+      <div class="or-line"></div>
+      <span class="or-text">EXTRACTED JOB DETAILS</span>
+      <div class="or-line"></div>
+    </div>
+
+    <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div>
+        <label class="label">Company</label>
+        <input class="input" value="Stripe" disabled style="background:#f8f9fb;">
+      </div>
+      <div>
+        <label class="label">Position</label>
+        <input class="input" value="Software Engineer, Payments" disabled style="background:#f8f9fb;">
+      </div>
+    </div>
+
+    <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div>
+        <label class="label">Location</label>
+        <input class="input" value="San Francisco / Remote" disabled style="background:#f8f9fb;">
+      </div>
+      <div>
+        <label class="label">Salary Range</label>
+        <input class="input" value="$180,000 - $220,000" disabled style="background:#f8f9fb;">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="label">Key Requirements (extracted)</label>
+      <div style="display:flex; flex-wrap:wrap; gap: 6px;">
+        <span style="padding:4px 10px; border-radius:6px; font-size:12px; background:#dbeafe; color:#1d4ed8;">TypeScript</span>
+        <span style="padding:4px 10px; border-radius:6px; font-size:12px; background:#dbeafe; color:#1d4ed8;">Payment Systems</span>
+        <span style="padding:4px 10px; border-radius:6px; font-size:12px; background:#dbeafe; color:#1d4ed8;">API Design</span>
+        <span style="padding:4px 10px; border-radius:6px; font-size:12px; background:#dbeafe; color:#1d4ed8;">React</span>
+        <span style="padding:4px 10px; border-radius:6px; font-size:12px; background:#dbeafe; color:#1d4ed8;">Distributed Systems</span>
+        <span style="padding:4px 10px; border-radius:6px; font-size:12px; background:#dbeafe; color:#1d4ed8;">5+ years</span>
+        <span style="padding:4px 10px; border-radius:6px; font-size:12px; background:#fef3c7; color:#92400e;">Ruby (nice to have)</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="font-size:16px; padding: 14px;">✨ Tailor My CV for This Job</button>
+    <button class="btn btn-secondary">Save for Later</button>
+  </div>
+</div>
+</body>
+</html>
