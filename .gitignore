@@ -23,6 +23,20 @@
 # misc
 .DS_Store
 *.pem
+*.log
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# secrets / credentials
+*.key
+*.cert
+credentials.json
+secrets.json
 
 # debug
 npm-debug.log*
@@ -35,6 +49,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# superpowers brainstorming
+.superpowers/
 
 # typescript
 *.tsbuildinfo

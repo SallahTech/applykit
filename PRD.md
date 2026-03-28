@@ -245,7 +245,8 @@ Application {
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255),
+  firstName VARCHAR(255),
+  lastName VARCHAR(255),
   plan VARCHAR(20) DEFAULT 'free', -- free, pro, pro_plus
   payment_id VARCHAR(255), -- Lemon Squeezy order ID
   cv_tailors_used INTEGER DEFAULT 0,
