@@ -54,6 +54,10 @@ yarn-error.log*
 .superpowers/
 /docs/superpowers/
 
+# project docs (internal)
+CLAUDE.md
+PRD.md
+
 # mockups
 /mockups/
 
