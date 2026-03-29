@@ -1,10 +1,43 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import type { Profile } from "@/lib/supabase/db-types";
 
 export function PlanSection() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [activeCount, setActiveCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [profileRes, appsRes] = await Promise.all([
+          fetch("/api/profile"),
+          fetch("/api/applications"),
+        ]);
+        if (profileRes.ok) {
+          const { profile } = await profileRes.json();
+          setProfile(profile);
+        }
+        if (appsRes.ok) {
+          const { applications } = await appsRes.json();
+          const active = applications.filter((a: any) => !["rejected", "accepted"].includes(a.status));
+          setActiveCount(active.length);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+  }
+
   return (
     <div>
       <h2 className="text-lg font-semibold text-foreground mb-6">Plan & Billing</h2>
@@ -13,30 +46,30 @@ export function PlanSection() {
       <div className="rounded-xl border border-border bg-muted/30 p-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <span className="bg-accent/60 text-muted-foreground text-xs px-3 py-1 rounded-full font-medium">
-            Free Plan
+            {profile?.plan ? profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1).replace("_", " ") : "Free"} Plan
           </span>
           <span className="text-xs text-muted-foreground">Current</span>
         </div>
 
         <p className="text-sm text-foreground/80 mb-1">
           Active applications{" "}
-          <span className="text-muted-foreground">— 3 of 5 used</span>
+          <span className="text-muted-foreground">— {activeCount} of {profile?.applications_limit ?? 5} used</span>
         </p>
         <div className="h-2 bg-muted rounded-full mb-4">
           <div
             className="h-full bg-blue-500 rounded-full"
-            style={{ width: "60%" }}
+            style={{ width: `${Math.min(100, (activeCount / (profile?.applications_limit ?? 5)) * 100)}%` }}
           />
         </div>
 
         <p className="text-sm text-foreground/80 mb-1">
           CV tailors this month{" "}
-          <span className="text-muted-foreground">— 1 of 3 used</span>
+          <span className="text-muted-foreground">— {profile?.cv_tailors_used ?? 0} of {profile?.cv_tailors_limit ?? 3} used</span>
         </p>
         <div className="h-2 bg-muted rounded-full mb-4">
           <div
             className="h-full bg-blue-500 rounded-full"
-            style={{ width: "33%" }}
+            style={{ width: `${Math.min(100, ((profile?.cv_tailors_used ?? 0) / (profile?.cv_tailors_limit ?? 3)) * 100)}%` }}
           />
         </div>
 

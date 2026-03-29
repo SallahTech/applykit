@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { KanbanSquare, List } from "lucide-react";
@@ -8,9 +9,36 @@ import { AppNavbar } from "@/components/app-navbar";
 import { KanbanBoard } from "@/components/board/kanban-board";
 import { BoardListView } from "@/components/board/board-list-view";
 import { usePreferences } from "@/components/preferences-provider";
+import type { Profile } from "@/lib/supabase/db-types";
 
 export default function BoardPage() {
   const { boardView, setBoardView } = usePreferences();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [activeCount, setActiveCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const { profile } = await res.json();
+          setProfile(profile);
+        }
+      } catch {}
+    }
+    async function fetchApplications() {
+      try {
+        const res = await fetch("/api/applications");
+        if (res.ok) {
+          const { applications } = await res.json();
+          const active = applications.filter((a: any) => !["rejected", "accepted"].includes(a.status));
+          setActiveCount(active.length);
+        }
+      } catch {}
+    }
+    fetchProfile();
+    fetchApplications();
+  }, []);
 
   return (
     <>
@@ -20,6 +48,11 @@ export default function BoardPage() {
         <div className="bg-card border-b border-border px-4 py-3 pt-[4.5rem]">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold text-foreground">Application Board</h1>
+            {profile && profile.plan === "free" && (
+              <span className="text-xs text-muted-foreground bg-muted/40 px-3 py-1 rounded-full">
+                {activeCount} of {profile.applications_limit} applications
+              </span>
+            )}
             <div className="flex items-center gap-3">
               <div className="flex bg-muted/60 rounded-lg p-0.5">
                 <button

@@ -2,30 +2,79 @@
 
 import { useState } from "react";
 import { Lightbulb, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EXTRACTED_JOB } from "@/lib/mock-data";
+
+interface ExtractedData {
+  company: string;
+  position: string;
+  location: string;
+  salary_range: string;
+  requirements: Array<{ text: string; type: "required" | "nice-to-have" }>;
+  job_description: string;
+}
+
+interface JobMeta {
+  company: string;
+  position: string;
+  location?: string;
+  salary_range?: string;
+}
 
 interface UrlExtractorProps {
-  onExtracted: () => void;
+  onExtracted: (jobDescription: string, meta?: JobMeta) => void;
 }
 
 export function UrlExtractor({ onExtracted }: UrlExtractorProps) {
-  const [url, setUrl] = useState(
-    "https://stripe.com/jobs/listing/software-engineer-payments"
-  );
+  const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [extracted, setExtracted] = useState(false);
+  const [extractedData, setExtractedData] = useState<ExtractedData | null>(
+    null
+  );
 
-  function handleExtract() {
+  async function handleExtract() {
+    if (!url.trim()) {
+      toast.error("Paste a job URL first");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    setExtractedData(null);
+
+    try {
+      const res = await fetch("/api/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(
+          data.error || "Failed to extract. Try pasting the description directly."
+        );
+      }
+
+      const { extracted } = await res.json();
+      setExtractedData(extracted);
+      onExtracted(extracted.job_description, {
+        company: extracted.company,
+        position: extracted.position,
+        location: extracted.location,
+        salary_range: extracted.salary_range,
+      });
+      toast.success("Job details extracted!");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Extraction failed";
+      toast.error(message);
+    } finally {
       setLoading(false);
-      setExtracted(true);
-      onExtracted();
-    }, 1000);
+    }
   }
 
   return (
@@ -72,7 +121,7 @@ export function UrlExtractor({ onExtracted }: UrlExtractorProps) {
       </div>
 
       {/* Extracted state */}
-      {extracted && (
+      {extractedData && (
         <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
           {/* Divider */}
           <div className="flex items-center gap-3 pt-1">
@@ -86,21 +135,21 @@ export function UrlExtractor({ onExtracted }: UrlExtractorProps) {
           {/* 2x2 grid */}
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Company", id: "company", value: EXTRACTED_JOB.company },
+              { label: "Company", id: "company", value: extractedData.company },
               {
                 label: "Position",
                 id: "position",
-                value: EXTRACTED_JOB.position,
+                value: extractedData.position,
               },
               {
                 label: "Location",
                 id: "location",
-                value: EXTRACTED_JOB.location,
+                value: extractedData.location,
               },
               {
                 label: "Salary Range",
                 id: "salary",
-                value: EXTRACTED_JOB.salaryRange,
+                value: extractedData.salary_range || "Not specified",
               },
             ].map((field) => (
               <div key={field.id}>
@@ -121,28 +170,51 @@ export function UrlExtractor({ onExtracted }: UrlExtractorProps) {
           </div>
 
           {/* Key Requirements */}
-          <div>
-            <p className="text-[11px] font-medium text-muted-foreground mb-2">
-              Key Requirements (extracted)
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {EXTRACTED_JOB.requirements.map((req) => (
-                <Badge
-                  key={req.text}
-                  className={
-                    req.type === "required"
-                      ? "bg-blue-500/15 text-blue-400 border-0 text-xs font-medium px-2.5 py-0.5 rounded-md"
-                      : "bg-amber-500/15 text-amber-400 border-0 text-xs font-medium px-2.5 py-0.5 rounded-md"
-                  }
-                >
-                  {req.text}
-                  {req.type === "nice-to-have" && (
-                    <span className="text-amber-500/60 ml-1">(nice to have)</span>
-                  )}
-                </Badge>
-              ))}
+          {extractedData.requirements.length > 0 && (
+            <div>
+              <p className="text-[11px] font-medium text-muted-foreground mb-2">
+                Key Requirements (extracted)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {extractedData.requirements.map((req, i) => (
+                  <Badge
+                    key={`${req.text}-${i}`}
+                    className={
+                      req.type === "required"
+                        ? "bg-blue-500/15 text-blue-400 border-0 text-xs font-medium px-2.5 py-0.5 rounded-md"
+                        : "bg-amber-500/15 text-amber-400 border-0 text-xs font-medium px-2.5 py-0.5 rounded-md"
+                    }
+                  >
+                    {req.text}
+                    {req.type === "nice-to-have" && (
+                      <span className="text-amber-500/60 ml-1">
+                        (nice to have)
+                      </span>
+                    )}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Job Description */}
+          {extractedData.job_description && (
+            <div>
+              <label
+                htmlFor="extracted-description"
+                className="text-[11px] font-medium text-muted-foreground mb-1.5 block"
+              >
+                Job Description
+              </label>
+              <Textarea
+                id="extracted-description"
+                className="bg-muted/30 border-border text-foreground text-sm min-h-[180px] resize-none rounded-xl disabled:opacity-70"
+                value={extractedData.job_description}
+                disabled
+                rows={8}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

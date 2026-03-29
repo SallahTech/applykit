@@ -12,9 +12,51 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "ApplyKit — AI-Powered CV Tailoring & Job Tracker",
+  title: "ApplyKit — AI Resume Tailoring & Job Application Tracker",
   description:
-    "Stop sending the same resume everywhere. ApplyKit tailors your CV to every job description with AI and tracks all your applications in one place.",
+    "Tailor your resume to every job description in seconds with AI. Track applications on a Kanban board, boost your match score, and land more interviews. Free to start.",
+  keywords: [
+    "AI resume builder",
+    "AI CV tailor",
+    "resume tailoring tool",
+    "CV optimizer",
+    "job application tracker",
+    "ATS resume checker",
+    "resume keyword optimizer",
+    "AI cover letter generator",
+    "job search organizer",
+    "kanban job tracker",
+    "resume match score",
+    "tailor resume to job description",
+    "AI resume writer",
+    "job board tracker",
+    "application tracking system",
+    "resume PDF generator",
+    "career management tool",
+    "job hunt organizer",
+    "resume skills matcher",
+    "AI job application tool",
+  ],
+  authors: [{ name: "ApplyKit" }],
+  creator: "ApplyKit",
+  metadataBase: new URL("https://applykit.app"),
+  openGraph: {
+    type: "website",
+    title: "ApplyKit — AI Resume Tailoring & Job Application Tracker",
+    description:
+      "Tailor your resume to every job description in seconds with AI. Track applications, boost your match score, and land more interviews.",
+    siteName: "ApplyKit",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ApplyKit — AI Resume Tailoring & Job Application Tracker",
+    description:
+      "Tailor your resume to every job description in seconds with AI. Track applications, boost your match score, and land more interviews.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,27 +14,65 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import { KanbanColumn } from "@/components/board/kanban-column";
 import { DragOverlayCard } from "@/components/board/drag-overlay-card";
-import { BOARD_COLUMNS, BOARD_CARDS, COLUMN_ACCENTS } from "@/lib/mock-data";
-import type { ApplicationCard } from "@/types";
+import { QuickAddModal } from "@/components/board/quick-add-modal";
+import { CardDetailModal } from "@/components/board/card-detail-modal";
+import { BOARD_COLUMNS, COLUMN_ACCENTS } from "@/lib/mock-data";
+import { Button } from "@/components/ui/button";
+import type { Application, ReorderUpdate } from "@/lib/supabase/db-types";
 
 export function KanbanBoard() {
-  const [boardData, setBoardData] = useState<Record<string, ApplicationCard[]>>(
-    () => structuredClone(BOARD_CARDS)
-  );
+  const initialBoard: Record<string, Application[]> = {};
+  BOARD_COLUMNS.forEach((col) => { initialBoard[col.id] = []; });
+
+  const [boardData, setBoardData] = useState<Record<string, Application[]>>(initialBoard);
   const [columnNames, setColumnNames] = useState<Record<string, string>>(() =>
     Object.fromEntries(BOARD_COLUMNS.map((col) => [col.id, col.name]))
   );
-  const [activeCard, setActiveCard] = useState<ApplicationCard | null>(null);
+  const [activeCard, setActiveCard] = useState<Application | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [overColumnId, setOverColumnId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalStatus, setAddModalStatus] = useState("saved");
+  const [detailCard, setDetailCard] = useState<Application | null>(null);
 
   // Use a ref to avoid stale closure issues with boardData in drag handlers
   const boardDataRef = useRef(boardData);
   boardDataRef.current = boardData;
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const preDropSnapshotRef = useRef<Record<string, Application[]> | null>(null);
+
+  // Fetch applications on mount
+  useEffect(() => {
+    async function fetchApplications() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/applications");
+        if (!res.ok) throw new Error();
+        const { applications } = await res.json();
+        // Group by status
+        const grouped: Record<string, Application[]> = {};
+        BOARD_COLUMNS.forEach((col) => { grouped[col.id] = []; });
+        applications.forEach((app: Application) => {
+          if (grouped[app.status]) grouped[app.status].push(app);
+        });
+        setBoardData(grouped);
+      } catch {
+        setError("Failed to load applications");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchApplications();
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -52,6 +90,27 @@ export function KanbanBoard() {
     []
   );
 
+  async function saveReorder(updates: ReorderUpdate[]) {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    try {
+      const res = await fetch("/api/applications/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ updates }),
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error();
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      if (preDropSnapshotRef.current) {
+        setBoardData(preDropSnapshotRef.current);
+      }
+      toast.error("Failed to save. Changes reverted.");
+    }
+  }
+
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
       const cardId = event.active.id as string;
@@ -63,9 +122,10 @@ export function KanbanBoard() {
       if (!card) return;
       setActiveCard(card);
       setActiveColumnId(columnId);
-      setAnnouncement(`Picked up ${card.company} — ${card.title}`);
+      preDropSnapshotRef.current = JSON.parse(JSON.stringify(boardData));
+      setAnnouncement(`Picked up ${card.company_name} — ${card.job_title}`);
     },
-    [findColumnByCardId]
+    [findColumnByCardId, boardData]
   );
 
   const handleDragOver = useCallback(
@@ -139,22 +199,43 @@ export function KanbanBoard() {
           (c) => c.id === overId
         );
 
+        let newBoardData = boardDataRef.current;
+
         if (oldIndex !== newIndex && newIndex >= 0) {
-          setBoardData((prev) => ({
-            ...prev,
-            [activeColumn]: arrayMove(prev[activeColumn], oldIndex, newIndex),
-          }));
+          const reordered = arrayMove(boardDataRef.current[activeColumn], oldIndex, newIndex);
+          newBoardData = { ...boardDataRef.current, [activeColumn]: reordered };
+          setBoardData(newBoardData);
         }
 
+        // Compute updates for the column the card ended up in
+        const updates: ReorderUpdate[] = newBoardData[activeColumn].map((card, index) => ({
+          id: card.id,
+          status: activeColumn,
+          board_position: index,
+        }));
+
+        // If the card moved from a different column (handled in dragOver), include source column updates
+        const sourceColumn = activeColumnId;
+        if (sourceColumn && sourceColumn !== activeColumn) {
+          const sourceUpdates = newBoardData[sourceColumn].map((card, index) => ({
+            id: card.id,
+            status: sourceColumn,
+            board_position: index,
+          }));
+          updates.push(...sourceUpdates);
+        }
+
+        saveReorder(updates);
+
         setAnnouncement(
-          `Dropped ${activeCard?.company} in ${columnNames[activeColumn]}`
+          `Dropped ${activeCard?.company_name} in ${columnNames[activeColumn]}`
         );
       }
 
       setActiveCard(null);
       setActiveColumnId(null);
     },
-    [findColumnByCardId, activeCard, columnNames]
+    [findColumnByCardId, activeCard, activeColumnId, columnNames]
   );
 
   const handleDragCancel = useCallback(() => {
@@ -163,6 +244,58 @@ export function KanbanBoard() {
     setActiveColumnId(null);
     setOverColumnId(null);
   }, []);
+
+  async function handleDeleteCard(cardId: string) {
+    try {
+      const res = await fetch(`/api/applications/${cardId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setBoardData((prev) => {
+        const next = { ...prev };
+        for (const col of Object.keys(next)) {
+          next[col] = next[col].filter((c) => c.id !== cardId);
+        }
+        return next;
+      });
+      toast.success("Application deleted");
+    } catch {
+      toast.error("Failed to delete application");
+    }
+  }
+
+  function handleApplicationCreated(app: Application) {
+    setBoardData((prev) => ({
+      ...prev,
+      [app.status]: [...(prev[app.status] || []), app],
+    }));
+  }
+
+  function handleCardUpdated(updated: Application) {
+    setBoardData((prev) => {
+      const next = { ...prev };
+      for (const col of Object.keys(next)) {
+        next[col] = next[col].map((c) => (c.id === updated.id ? updated : c));
+      }
+      return next;
+    });
+    setDetailCard(null);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <p className="text-muted-foreground">{error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
 
   return (
     <DndContext
@@ -192,6 +325,9 @@ export function KanbanBoard() {
                 setColumnNames((prev) => ({ ...prev, [col.id]: newName }))
               }
               isOver={overColumnId === col.id}
+              onAddClick={() => { setAddModalStatus(col.id); setAddModalOpen(true); }}
+              onDeleteCard={handleDeleteCard}
+              onCardClick={(card) => setDetailCard(card)}
             />
           ))}
         </div>
@@ -206,6 +342,25 @@ export function KanbanBoard() {
           />
         )}
       </DragOverlay>
+
+      {/* Quick-add modal */}
+      <QuickAddModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        defaultStatus={addModalStatus}
+        onApplicationCreated={handleApplicationCreated}
+      />
+
+      {/* Card detail/edit modal */}
+      {detailCard && (
+        <CardDetailModal
+          key={detailCard.id}
+          open={!!detailCard}
+          onOpenChange={(open) => { if (!open) setDetailCard(null); }}
+          application={detailCard}
+          onUpdated={handleCardUpdated}
+        />
+      )}
     </DndContext>
   );
 }

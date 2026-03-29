@@ -2,8 +2,19 @@
 
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export function AccountSection() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
   return (
     <div>
       <h2 className="text-lg font-semibold text-foreground mb-6">Account</h2>
@@ -11,7 +22,7 @@ export function AccountSection() {
       <Button
         variant="outline"
         className="border-border text-muted-foreground hover:bg-muted"
-        onClick={() => toast("Coming soon!")}
+        onClick={handleSignOut}
       >
         Sign Out
       </Button>

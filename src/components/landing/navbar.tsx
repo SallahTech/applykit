@@ -20,6 +20,7 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +29,18 @@ export function Navbar() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsSignedIn(!!session?.user);
+      } catch {}
+    }
+    checkAuth();
   }, []);
 
   return (
@@ -65,16 +78,26 @@ export function Navbar() {
 
         {/* Right buttons (desktop) */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/sign-in">
-            <Button variant="ghost" className="text-slate-300">
-              Sign In
-            </Button>
-          </Link>
-          <Link href="/tailor">
-            <button className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition">
-              Get Started Free
-            </button>
-          </Link>
+          {isSignedIn ? (
+            <Link href="/board">
+              <button className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition">
+                Go to Dashboard
+              </button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/sign-in">
+                <Button variant="ghost" className="text-slate-300">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/sign-up">
+                <button className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition">
+                  Get Started Free
+                </button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -101,19 +124,29 @@ export function Navbar() {
               <div className="border-t border-slate-700 my-4" />
 
               <div className="flex flex-col gap-3">
-                <Link href="/sign-in" onClick={() => setOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className="w-full text-slate-300 justify-center"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/tailor" onClick={() => setOpen(false)}>
-                  <button className="w-full px-4 py-2 text-sm font-medium text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition">
-                    Get Started Free
-                  </button>
-                </Link>
+                {isSignedIn ? (
+                  <Link href="/board" onClick={() => setOpen(false)}>
+                    <button className="w-full px-4 py-2 text-sm font-medium text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition">
+                      Go to Dashboard
+                    </button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/sign-in" onClick={() => setOpen(false)}>
+                      <Button
+                        variant="ghost"
+                        className="w-full text-slate-300 justify-center"
+                      >
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/sign-up" onClick={() => setOpen(false)}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition">
+                        Get Started Free
+                      </button>
+                    </Link>
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>

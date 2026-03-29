@@ -1,28 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import { Sparkles, Bookmark, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UrlExtractor } from "@/components/tailor/url-extractor";
+import { CVUpload } from "@/components/tailor/cv-upload";
 import { SAMPLE_JOB_DESCRIPTION } from "@/lib/mock-data";
+import type { BaseCVRecord, JobMeta } from "@/lib/supabase/db-types";
 
 interface ApplicationFormProps {
-  onSubmit: () => void;
+  onSubmit: (jobDescription: string, jobMeta?: JobMeta) => void;
 }
 
 export function ApplicationForm({ onSubmit }: ApplicationFormProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("url");
   const [textValue, setTextValue] = useState(SAMPLE_JOB_DESCRIPTION);
-  const [extracted, setExtracted] = useState(false);
+  const [extractedJobDescription, setExtractedJobDescription] = useState<string | null>(null);
+  const [extractedMeta, setExtractedMeta] = useState<JobMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cv, setCv] = useState<BaseCVRecord | null>(null);
+  const [cvLoading, setCvLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function fetchCV() {
+      try {
+        const res = await fetch("/api/cv");
+        if (res.ok) {
+          const { cv } = await res.json();
+          setCv(cv);
+        }
+      } catch {} finally {
+        setCvLoading(false);
+      }
+    }
+    fetchCV();
+  }, []);
 
   function handleSubmit() {
-    if (activeTab === "url" && !extracted) {
+    if (!cv) {
+      setError("Upload a CV first");
+      return;
+    }
+    if (activeTab === "url" && !extractedJobDescription) {
       setError("Extract the job details first");
       return;
     }
@@ -31,7 +58,9 @@ export function ApplicationForm({ onSubmit }: ApplicationFormProps) {
       return;
     }
     setError(null);
-    onSubmit();
+
+    const jobDescription = activeTab === "text" ? textValue : extractedJobDescription!;
+    onSubmit(jobDescription, extractedMeta || undefined);
   }
 
   return (
@@ -63,20 +92,14 @@ export function ApplicationForm({ onSubmit }: ApplicationFormProps) {
           </p>
 
           {/* CV Status Bar */}
-          <div className="bg-emerald-500/8 border border-emerald-500/15 rounded-xl p-3.5 flex items-center gap-3 mb-6">
-            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
-            </div>
-            <span className="text-sm text-muted-foreground">
-              Using base CV:{" "}
-              <strong className="text-foreground font-medium">
-                alex-chen-resume-2026.pdf
-              </strong>
-              <span className="text-muted-foreground/50 mx-1.5">·</span>
-              <button className="text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                Change
-              </button>
-            </span>
+          <div className="mb-6">
+            {cvLoading ? (
+              <div className="bg-muted/40 border border-border rounded-xl p-3.5 animate-pulse">
+                <div className="h-5 bg-muted rounded w-2/3" />
+              </div>
+            ) : (
+              <CVUpload currentCV={cv} onCVReady={(newCv) => setCv(newCv)} />
+            )}
           </div>
 
           {/* Tabbed Input */}
@@ -97,7 +120,7 @@ export function ApplicationForm({ onSubmit }: ApplicationFormProps) {
             </TabsList>
 
             <TabsContent value="url">
-              <UrlExtractor onExtracted={() => setExtracted(true)} />
+              <UrlExtractor onExtracted={(jd, meta) => { setExtractedJobDescription(jd); if (meta) setExtractedMeta(meta); }} />
             </TabsContent>
 
             <TabsContent value="text">
@@ -117,12 +140,18 @@ export function ApplicationForm({ onSubmit }: ApplicationFormProps) {
 
           {/* CTA Button */}
           <Button
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white h-12 text-[15px] font-semibold mt-5 rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/30"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white h-12 text-[15px] font-semibold mt-5 rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSubmit}
+            disabled={!cv}
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Tailor My CV for This Job
           </Button>
+          {!cv && !cvLoading && (
+            <p className="text-xs text-amber-400 mt-2 text-center">
+              ↑ Upload your CV above to enable tailoring
+            </p>
+          )}
 
           {error && (
             <p className="text-sm text-red-400 mt-2.5 text-center">{error}</p>
@@ -132,10 +161,44 @@ export function ApplicationForm({ onSubmit }: ApplicationFormProps) {
           <Button
             variant="outline"
             className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 mt-2.5 h-11 rounded-xl"
-            onClick={() =>
-              toast("Coming soon! Save feature is in development.")
-            }
+            disabled={saving}
+            onClick={async () => {
+              const hasUrl = activeTab === "url" && extractedMeta;
+              const hasText = activeTab === "text" && textValue.trim();
+              if (!hasUrl && !hasText) {
+                setError("Paste a job URL or description first");
+                return;
+              }
+              setError(null);
+              setSaving(true);
+              try {
+                const res = await fetch("/api/applications", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    company_name: extractedMeta?.company || "Unknown Company",
+                    job_title: extractedMeta?.position || "Position",
+                    status: "saved",
+                    job_description: activeTab === "text" ? textValue : extractedJobDescription,
+                    salary_range: extractedMeta?.salary_range || null,
+                    location: extractedMeta?.location || null,
+                  }),
+                });
+                if (res.status === 403) {
+                  toast.error("Application limit reached. Upgrade to Pro.");
+                  return;
+                }
+                if (!res.ok) throw new Error();
+                toast.success("Job saved to your board!");
+                router.push("/board");
+              } catch {
+                toast.error("Failed to save. Please try again.");
+              } finally {
+                setSaving(false);
+              }
+            }}
           >
+            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bookmark className="w-4 h-4 mr-2" />}
             Save for Later
           </Button>
         </div>

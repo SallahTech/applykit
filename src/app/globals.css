@@ -133,6 +133,16 @@
   html {
     @apply font-sans;
   }
+  button,
+  [role="button"],
+  a,
+  select,
+  [type="checkbox"],
+  [type="radio"],
+  label[for],
+  summary {
+    cursor: pointer;
+  }
 }
 
 /* Utility Classes */

@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { Menu, LogOut, Settings, User as UserIcon, BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -15,7 +26,10 @@ import {
 export function AppNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+  const supabaseClient = createClient();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +39,28 @@ export function AppNavbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    // Get initial session
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    // Listen for changes
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleSignOut() {
+    await supabaseClient.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
+  const userInitial = user?.user_metadata?.full_name
+    ? user.user_metadata.full_name.charAt(0).toUpperCase()
+    : user?.email?.charAt(0).toUpperCase() ?? "?";
 
   const navLinkClass =
     "text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer";
@@ -61,9 +97,20 @@ export function AppNavbar() {
           </Link>
 
           <Link
-            href="/tailor"
+            href="/analytics"
             className={`text-sm transition-colors cursor-pointer ${
-              pathname === "/tailor"
+              pathname === "/analytics"
+                ? "text-foreground font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Analytics
+          </Link>
+
+          <Link
+            href="/cv-manager"
+            className={`text-sm transition-colors cursor-pointer ${
+              pathname === "/cv-manager"
                 ? "text-foreground font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
@@ -85,19 +132,73 @@ export function AppNavbar() {
 
         {/* Right buttons (desktop) */}
         <div className="hidden md:flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="border-border text-muted-foreground hover:bg-muted hover:text-foreground bg-transparent"
-            onClick={() => toast("Coming soon!")}
-          >
-            Import Jobs
-          </Button>
-
-          <Link href="/tailor">
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition border-0">
-              + New Application
-            </Button>
-          </Link>
+          {user ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border text-muted-foreground hover:bg-muted"
+                onClick={() => toast("Coming soon!")}
+              >
+                Import Jobs
+              </Button>
+              <Link href="/tailor">
+                <Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                  + New Application
+                </Button>
+              </Link>
+              <div className="ml-2 pl-2 border-l border-border">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background">
+                    {userInitial}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-card border-border">
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className="font-normal">
+                        <p className="text-sm font-medium text-foreground">
+                          {user?.user_metadata?.full_name || "User"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {user?.email}
+                        </p>
+                      </DropdownMenuLabel>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuGroup>
+                      <Link href="/analytics">
+                        <DropdownMenuItem className="flex items-center gap-2">
+                          <BarChart3 className="w-4 h-4" />
+                          Analytics
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/settings">
+                        <DropdownMenuItem className="flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          Settings
+                        </DropdownMenuItem>
+                      </Link>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem
+                        onClick={handleSignOut}
+                        className="text-red-400 focus:text-red-400"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
+          ) : (
+            <Link href="/sign-in">
+              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                Sign In
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -127,10 +228,22 @@ export function AppNavbar() {
                 </Link>
 
                 <Link
-                  href="/tailor"
+                  href="/analytics"
                   onClick={() => setOpen(false)}
                   className={`text-sm transition-colors cursor-pointer py-2 ${
-                    pathname === "/tailor"
+                    pathname === "/analytics"
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Analytics
+                </Link>
+
+                <Link
+                  href="/cv-manager"
+                  onClick={() => setOpen(false)}
+                  className={`text-sm transition-colors cursor-pointer py-2 ${
+                    pathname === "/cv-manager"
                       ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
@@ -171,6 +284,26 @@ export function AppNavbar() {
                   </Button>
                 </Link>
               </div>
+
+              {user ? (
+                <>
+                  <div className="border-t border-border my-2 pt-2">
+                    <button
+                      onClick={() => { handleSignOut(); setOpen(false); }}
+                      className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400 hover:bg-muted/50 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <Link href="/sign-in" onClick={() => setOpen(false)}>
+                  <Button variant="ghost" className="w-full text-muted-foreground justify-center">
+                    Sign In
+                  </Button>
+                </Link>
+              )}
             </SheetContent>
           </Sheet>
         </div>

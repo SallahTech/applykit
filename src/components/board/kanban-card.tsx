@@ -3,15 +3,28 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
-import { ApplicationCard } from "@/types";
+import { Trash2 } from "lucide-react";
+import type { Application } from "@/lib/supabase/db-types";
 
-interface KanbanCardProps {
-  card: ApplicationCard;
-  accentColor: string;
-  isRejected?: boolean;
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function KanbanCard({ card, accentColor, isRejected }: KanbanCardProps) {
+interface KanbanCardProps {
+  card: Application;
+  accentColor: string;
+  isRejected?: boolean;
+  onDelete?: () => void;
+  onClick?: () => void;
+}
+
+export function KanbanCard({ card, accentColor, isRejected, onDelete, onClick }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -27,7 +40,7 @@ export function KanbanCard({ card, accentColor, isRejected }: KanbanCardProps) {
     borderLeft: `3px solid ${accentColor}`,
   };
 
-  const matchScore = card.matchScore;
+  const matchScore = card.match_score ?? 0;
 
   const matchBadge =
     matchScore > 0 ? (
@@ -46,23 +59,43 @@ export function KanbanCard({ card, accentColor, isRejected }: KanbanCardProps) {
       )
     ) : null;
 
+  const followUpText = card.follow_up_date ? (() => {
+    const followUpDate = new Date(card.follow_up_date);
+    const now = new Date();
+    const diffDays = Math.floor((followUpDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return "Follow up overdue";
+    if (diffDays === 0) return "Follow up today";
+    if (diffDays === 1) return "Follow up tomorrow";
+    return `Follow up in ${diffDays} days`;
+  })() : null;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      aria-label={`${card.company} — ${card.title}${matchScore > 0 ? `, ${matchScore}% match` : ""}`}
+      onClick={() => { if (!isDragging && onClick) onClick(); }}
+      aria-label={`${card.company_name} — ${card.job_title}${matchScore > 0 ? `, ${matchScore}% match` : ""}`}
       className={[
-        "rounded-xl bg-card border border-border p-4 cursor-grab active:cursor-grabbing transition-shadow hover:border-border hover:shadow-lg hover:shadow-black/20",
+        "group relative rounded-xl bg-card border border-border p-4 cursor-grab active:cursor-grabbing transition-shadow hover:border-border hover:shadow-lg hover:shadow-black/20",
         isDragging ? "opacity-50" : "",
         isRejected ? "opacity-60" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <p className="text-sm font-semibold text-foreground mb-0.5">{card.company}</p>
-      <p className="text-xs text-muted-foreground mb-2">{card.title}</p>
+      {onDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all"
+          aria-label="Delete application"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+      <p className="text-sm font-semibold text-foreground mb-0.5">{card.company_name}</p>
+      <p className="text-xs text-muted-foreground mb-2">{card.job_title}</p>
 
       <div className="flex flex-wrap gap-1.5 mb-2">
         {matchBadge}
@@ -71,18 +104,18 @@ export function KanbanCard({ card, accentColor, isRejected }: KanbanCardProps) {
             {card.location}
           </Badge>
         )}
-        {card.salary && (
+        {card.salary_range && (
           <Badge className="bg-blue-500/15 text-blue-400 border-0 text-[10px]">
-            {card.salary}
+            {card.salary_range}
           </Badge>
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground">{card.date}</p>
+      <p className="text-xs text-muted-foreground">{formatDate(card.applied_date || card.created_at)}</p>
 
-      {card.followUp && (
+      {followUpText && (
         <p className="text-xs text-red-400 font-medium mt-1.5">
-          ⏰ {card.followUp}
+          ⏰ {followUpText}
         </p>
       )}
     </div>

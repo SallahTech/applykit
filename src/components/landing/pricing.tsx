@@ -21,9 +21,9 @@ export function Pricing() {
           No subscriptions. No recurring fees. Pay once, use forever.
         </p>
         <div className="flex justify-center">
-          <Badge className="bg-emerald-500/20 text-emerald-400 border-0 mb-12 mx-auto block w-fit px-4 py-1.5">
+          <span className="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-12 mx-auto px-5 py-2 rounded-full text-sm font-medium leading-normal">
             Pay once, use forever
-          </Badge>
+          </span>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-stretch justify-center">

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ClipboardPaste, Sparkles, KanbanSquare } from "lucide-react";
+import { AnimatedDemo } from "@/components/landing/animated-demo";
 
 const steps = [
   {
@@ -79,6 +80,9 @@ export function HowItWorks() {
             </div>
           ))}
         </div>
+
+        {/* Animated Demo */}
+        <AnimatedDemo />
       </div>
     </section>
   );

@@ -1,14 +1,16 @@
-import { CVData, Keyword } from "@/types";
+import type { ParsedCVData } from "@/lib/ai/provider";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 
 interface CVPanelProps {
   variant: "original" | "tailored";
-  cvData: CVData;
+  cvData: ParsedCVData;
   matchScore: number;
   matchLabel: string;
   changes?: string[];
-  keywords?: Keyword[];
+  keywords?: { found: string[]; missing: string[] };
+  enhancedBullets?: string[];
+  skillStatuses?: Array<{ name: string; status: "matched" | "added" | "default" }>;
 }
 
 export function CVPanel({
@@ -18,7 +20,19 @@ export function CVPanel({
   matchLabel,
   changes,
   keywords,
+  enhancedBullets,
+  skillStatuses,
 }: CVPanelProps) {
+  const getSkillStatus = (name: string) =>
+    skillStatuses?.find((s) => s.name === name)?.status ?? "default";
+
+  const contactParts = [
+    cvData.contact.email,
+    cvData.contact.location,
+    cvData.contact.linkedin,
+  ].filter(Boolean);
+  const contactLine = contactParts.join(" \u00B7 ");
+
   return (
     <div className="overflow-y-auto p-6">
       {/* Panel Header */}
@@ -31,7 +45,7 @@ export function CVPanel({
             </span>
           ) : (
             <span className="text-sm font-semibold text-foreground uppercase tracking-wider">
-              Tailored for Stripe
+              Tailored
             </span>
           )}
 
@@ -40,13 +54,9 @@ export function CVPanel({
               {matchScore}% — {matchLabel}
             </Badge>
           ) : (
-            <div className="flex items-center">
-              <span className="text-red-400 line-through text-xs">42%</span>
-              <span className="text-muted-foreground mx-1">→</span>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-0">
-                {matchScore}% — {matchLabel}
-              </Badge>
-            </div>
+            <Badge className="bg-emerald-500/20 text-emerald-400 border-0">
+              {matchScore}% — {matchLabel}
+            </Badge>
           )}
         </div>
 
@@ -77,8 +87,8 @@ export function CVPanel({
       )}
 
       {/* CV Content */}
-      <h3 className="text-xl font-bold text-foreground">{cvData.name}</h3>
-      <p className="text-xs text-muted-foreground mb-3">{cvData.contact}</p>
+      <h3 className="text-xl font-bold text-foreground">{cvData.contact.name}</h3>
+      <p className="text-xs text-muted-foreground mb-3">{contactLine}</p>
 
       {/* Summary */}
       {variant === "original" ? (
@@ -100,21 +110,21 @@ export function CVPanel({
         <div key={i} className="mb-4">
           <div className="flex justify-between items-baseline">
             <span className="text-sm font-semibold text-foreground">{exp.company}</span>
-            <span className="text-xs text-muted-foreground">{exp.dateRange}</span>
+            <span className="text-xs text-muted-foreground">{exp.start_date} - {exp.end_date}</span>
           </div>
           <p className="text-xs text-muted-foreground mb-2">{exp.title}</p>
           {exp.bullets.map((bullet, j) =>
-            bullet.enhanced && variant === "tailored" ? (
+            enhancedBullets?.includes(bullet) && variant === "tailored" ? (
               <div
                 key={j}
                 className="bg-emerald-500/10 rounded px-2 py-1.5 text-sm text-foreground/80 mb-1"
               >
-                • {bullet.text}
+                • {bullet}
                 <span className="text-xs text-emerald-400 font-semibold ml-2">Enhanced</span>
               </div>
             ) : (
               <div key={j} className="text-sm text-muted-foreground py-1">
-                • {bullet.text}
+                • {bullet}
               </div>
             )
           )}
@@ -128,25 +138,26 @@ export function CVPanel({
 
       <div className="flex flex-wrap gap-2">
         {cvData.skills.map((skill, i) => {
-          if (skill.status === "matched") {
+          const status = getSkillStatus(skill);
+          if (status === "matched") {
             return (
               <Badge key={i} className="bg-emerald-500/20 text-emerald-400 border-0">
-                {skill.name}
+                {skill}
               </Badge>
             );
-          } else if (skill.status === "added") {
+          } else if (status === "added") {
             return (
               <Badge
                 key={i}
                 className="bg-blue-500/20 text-blue-400 border border-dashed border-blue-500/40"
               >
-                {skill.name}
+                {skill}
               </Badge>
             );
           } else {
             return (
               <Badge key={i} className="bg-muted text-muted-foreground border-0">
-                {skill.name}
+                {skill}
               </Badge>
             );
           }
@@ -160,17 +171,20 @@ export function CVPanel({
             Keyword Coverage
           </p>
           <div className="flex flex-wrap gap-2">
-            {keywords.map((kw, i) => (
+            {keywords.found.map((text, i) => (
               <span
-                key={i}
-                className={
-                  kw.found
-                    ? "px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400"
-                    : "px-2 py-1 rounded text-xs bg-red-500/20 text-red-400 line-through"
-                }
+                key={`found-${i}`}
+                className="px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400"
               >
-                {kw.found ? "Found: " : "Missing: "}
-                {kw.text}
+                Found: {text}
+              </span>
+            ))}
+            {keywords.missing.map((text, i) => (
+              <span
+                key={`missing-${i}`}
+                className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400 line-through"
+              >
+                Missing: {text}
               </span>
             ))}
           </div>

@@ -4,15 +4,19 @@ import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { KanbanCard } from "@/components/board/kanban-card";
-import { BoardColumn, ApplicationCard } from "@/types";
+import type { BoardColumn } from "@/types";
+import type { Application } from "@/lib/supabase/db-types";
 
 interface KanbanColumnProps {
   column: BoardColumn;
-  cards: ApplicationCard[];
+  cards: Application[];
   accentColor: string;
   columnName: string;
   onRename: (newName: string) => void;
   isOver?: boolean;
+  onAddClick: () => void;
+  onDeleteCard: (id: string) => void;
+  onCardClick: (card: Application) => void;
 }
 
 export function KanbanColumn({
@@ -22,6 +26,9 @@ export function KanbanColumn({
   columnName,
   onRename,
   isOver,
+  onAddClick,
+  onDeleteCard,
+  onCardClick,
 }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({ id: column.id });
 
@@ -92,21 +99,28 @@ export function KanbanColumn({
           items={cards.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
         >
-          {cards.length === 0 ? (
+          {cards.length === 0 && (
             <div className="border border-dashed border-border rounded-lg p-4 text-center text-sm text-muted-foreground">
               No applications yet
             </div>
-          ) : (
-            cards.map((card) => (
-              <KanbanCard
-                key={card.id}
-                card={card}
-                accentColor={accentColor}
-                isRejected={column.id === "rejected"}
-              />
-            ))
           )}
+          {cards.map((card) => (
+            <KanbanCard
+              key={card.id}
+              card={card}
+              accentColor={accentColor}
+              isRejected={column.id === "rejected"}
+              onDelete={() => onDeleteCard(card.id)}
+              onClick={() => onCardClick(card)}
+            />
+          ))}
         </SortableContext>
+        <button
+          onClick={onAddClick}
+          className="w-full border border-dashed border-border rounded-lg p-3 text-center text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors mt-2"
+        >
+          + Add application
+        </button>
       </div>
     </div>
   );
