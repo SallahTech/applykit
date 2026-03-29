@@ -39,7 +39,7 @@ export function HowItWorks() {
           How It Works
         </h2>
         <p className="text-[#94a3b8] text-center mb-16 max-w-2xl mx-auto">
-          Three steps from job listing to tailored application
+          Paste a link. Get a rewritten CV. Track the application. That&apos;s it.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">

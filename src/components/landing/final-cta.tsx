@@ -25,15 +25,15 @@ export function FinalCTA() {
           id="final-cta-heading"
           className="text-3xl md:text-5xl font-extrabold text-white mb-6"
         >
-          Your Next Interview Starts Here.
+          Stop Sending the Same Resume Everywhere.
         </h2>
 
         <div className="flex items-center justify-center gap-4 text-sm text-[#7c8db5] mb-8 flex-wrap">
-          <span>{SOCIAL_PROOF.cvsTailored} CVs tailored</span>
+          <span>{SOCIAL_PROOF.cvsTailored} CVs rewritten</span>
           <span>·</span>
           <span>{SOCIAL_PROOF.avgMatchScore} avg match score</span>
           <span>·</span>
-          <span>{SOCIAL_PROOF.subscriptions} subscriptions</span>
+          <span>One-time payment, no subscription</span>
         </div>
 
         <Link href="/tailor">

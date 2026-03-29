@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/board", "/tailor", "/settings", "/analytics", "/cv-manager"],
     },
-    sitemap: "https://applykit-two.vercel.app/sitemap.xml",
+    sitemap: "https://tailormicv.com/sitemap.xml",
   };
 }

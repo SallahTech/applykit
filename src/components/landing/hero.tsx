@@ -24,10 +24,10 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight tracking-tight text-white">
-                Your Resume Gets{" "}
-                <span className="gradient-text">Filtered Out</span>.
+                One Resume.{" "}
+                <span className="gradient-text">Every Job</span>.
                 <br />
-                Fix That in 10 Seconds.
+                Rewritten by AI.
               </h1>
             </motion.div>
 
@@ -37,8 +37,9 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <p className="text-lg text-[#94a3b8] max-w-xl mt-6 leading-relaxed">
-                Paste any job description. Our AI rewrites your CV to match —
-                instantly. Track every application in one place.
+                Don&apos;t just tweak keywords — get a fully rewritten CV
+                matched to every job in seconds. Then track it all on one board.
+                No subscriptions. Ever.
               </p>
             </motion.div>
 
@@ -74,11 +75,11 @@ export function Hero() {
             >
               <div className="flex items-center gap-2 mt-8 text-sm text-[#7c8db5]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>{SOCIAL_PROOF.cvsTailored} CVs tailored</span>
+                <span>{SOCIAL_PROOF.cvsTailored} CVs rewritten</span>
                 <span>·</span>
-                <span>No credit card</span>
+                <span>No credit card needed</span>
                 <span>·</span>
-                <span>One-time payment</span>
+                <span>Pay once, own forever</span>
               </div>
             </motion.div>
           </div>

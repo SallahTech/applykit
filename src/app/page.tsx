@@ -11,11 +11,11 @@ import { Footer } from "@/components/landing/footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ApplyKit — AI Resume Tailoring & Job Application Tracker",
+  title: "ApplyKit — AI Rewrites Your Resume for Every Job",
   description:
-    "Stop sending the same resume everywhere. ApplyKit uses AI to tailor your CV to every job description, track applications on a Kanban board, and help you land more interviews. Free to start, no subscription required.",
+    "Other tools suggest keywords. ApplyKit fully rewrites your CV for every job description with AI. Track applications on a Kanban board, download ATS-ready PDFs, and pay once — no subscription. Free to start.",
   alternates: {
-    canonical: "https://applykit.app",
+    canonical: "https://tailormicv.com",
   },
 };
 

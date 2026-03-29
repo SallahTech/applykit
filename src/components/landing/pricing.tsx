@@ -15,10 +15,10 @@ export function Pricing() {
           id="pricing-heading"
           className="text-3xl md:text-4xl font-bold text-white text-center mb-4"
         >
-          Simple, One-Time Pricing
+          One Price. No Subscriptions. Ever.
         </h2>
         <p className="text-[#94a3b8] text-center mb-4">
-          No subscriptions. No recurring fees. Pay once, use forever.
+          Other tools charge $9-15/month. We charge once. You own it forever.
         </p>
         <div className="flex justify-center">
           <span className="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-12 mx-auto px-5 py-2 rounded-full text-sm font-medium leading-normal">

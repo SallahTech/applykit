@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "ApplyKit" }],
   creator: "ApplyKit",
-  metadataBase: new URL("https://applykit-two.vercel.app"),
+  metadataBase: new URL("https://tailormicv.com"),
   openGraph: {
     type: "website",
     title: "ApplyKit — AI Resume Tailoring & Job Application Tracker",

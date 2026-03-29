@@ -30,33 +30,33 @@ export const DEMO_RESULTS: DemoResult = {
 export const FEATURES: Feature[] = [
   {
     icon: "Sparkles",
-    title: "AI CV Tailoring",
-    description: "One-click resume rewriting that matches any job description",
+    title: "Full CV Rewrite, Not Suggestions",
+    description: "Other tools highlight keywords. We rewrite your entire CV — summary, bullets, skills — tailored to the specific role.",
   },
   {
     icon: "KanbanSquare",
-    title: "Kanban Tracker",
-    description: "Drag-and-drop pipeline from Applied to Accepted",
+    title: "Visual Application Tracker",
+    description: "Drag-and-drop Kanban board to track every application from Saved to Accepted. Never lose track of where you stand.",
   },
   {
     icon: "Target",
-    title: "Match Scoring",
-    description: "Know exactly how well your CV fits before you apply",
+    title: "Match Score Before You Apply",
+    description: "See your before/after match score so you know exactly how competitive your CV is before hitting submit.",
   },
   {
     icon: "Bell",
     title: "Follow-Up Reminders",
-    description: "Automated nudges so you never miss a follow-up",
+    description: "Set reminders on any application. Get nudged when it's time to follow up so opportunities don't slip away.",
   },
   {
     icon: "FileDown",
-    title: "PDF Export",
-    description: "Download polished, ATS-friendly PDFs instantly",
+    title: "One-Click PDF Download",
+    description: "Download your tailored CV as a clean, ATS-friendly PDF. Ready to attach and send in seconds.",
   },
   {
     icon: "BarChart3",
-    title: "Search Analytics",
-    description: "Track your response rate, funnel, and trends",
+    title: "Job Search Analytics",
+    description: "See your response rate, pipeline breakdown, and match score trends. Data-driven job searching.",
   },
 ];
 
@@ -64,19 +64,19 @@ export const TESTIMONIALS: Testimonial[] = [
   {
     name: "Sarah K.",
     role: "Product Designer",
-    quote: "Went from 3% response rate to 15% in two weeks. The CV tailoring is genuinely good.",
+    quote: "I tried three other tools that just highlighted keywords. ApplyKit actually rewrote my bullets and I went from 3% to 15% response rate in two weeks.",
     initials: "SK",
   },
   {
     name: "Marcus T.",
     role: "Software Engineer",
-    quote: "I was sending the same resume to 50 companies. ApplyKit showed me why that doesn't work.",
+    quote: "Pasted a job link, got a fully rewritten CV in 10 seconds. Downloaded the PDF, applied, got the interview. No subscription needed — paid once and I'm set.",
     initials: "MT",
   },
   {
     name: "Priya R.",
     role: "Data Analyst",
-    quote: "The Kanban board alone is worth it. Add AI CV tailoring and it's a no-brainer.",
+    quote: "The Kanban board keeps me organized and the match scores tell me where to focus. Landed my role in 3 weeks. Best $19 I've spent on my career.",
     initials: "PR",
   },
 ];
@@ -86,7 +86,7 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Free",
     price: "$0",
     priceLabel: "forever free",
-    description: "Perfect for getting started with your job search",
+    description: "Try the full rewrite experience — no card required",
     features: [
       { text: "5 active applications", included: true },
       { text: "3 CV tailors/month", included: true },
@@ -102,7 +102,7 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Pro",
     price: "$19",
     priceLabel: "one-time payment",
-    description: "Everything you need to land your dream job",
+    description: "Unlimited rewrites for serious job seekers",
     features: [
       { text: "Unlimited applications", included: true },
       { text: "Unlimited CV tailoring", included: true },
@@ -119,7 +119,7 @@ export const PRICING_TIERS: PricingTier[] = [
     name: "Pro+",
     price: "$39",
     priceLabel: "one-time payment",
-    description: "The complete job search toolkit",
+    description: "Full toolkit with cover letters and interview prep",
     features: [
       { text: "Unlimited applications", included: true },
       { text: "Unlimited CV tailoring", included: true },

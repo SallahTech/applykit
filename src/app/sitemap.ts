@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://applykit-two.vercel.app";
+  const baseUrl = "https://tailormicv.com";
 
   return [
     {
