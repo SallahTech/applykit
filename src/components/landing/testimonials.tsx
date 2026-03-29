@@ -18,8 +18,7 @@ export function Testimonials() {
           Real results from real job seekers
         </p>
 
-        {/* Desktop grid */}
-        <div className="hidden md:grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {TESTIMONIALS.map((testimonial, index) => (
             <motion.div
               key={testimonial.name}
@@ -28,55 +27,14 @@ export function Testimonials() {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <div className="glass-card p-6 relative">
+              <div className="glass-card p-5 sm:p-6 relative">
                 <span
                   aria-hidden="true"
                   className="text-4xl font-serif gradient-text absolute top-4 right-4 opacity-50"
                 >
                   "
                 </span>
-                <p className="text-sm text-slate-300 leading-relaxed mb-6 relative z-10">
-                  {testimonial.quote}
-                </p>
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm font-semibold">
-                      {testimonial.initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <span className="text-sm font-semibold text-white block">
-                      {testimonial.name}
-                    </span>
-                    <span className="text-xs text-[#7c8db5]">
-                      {testimonial.role}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Mobile horizontal scroll */}
-        <div className="md:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4">
-          {TESTIMONIALS.map((testimonial, index) => (
-            <motion.div
-              key={testimonial.name}
-              className="snap-center min-w-[85vw] flex-shrink-0"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-            >
-              <div className="glass-card p-6 relative">
-                <span
-                  aria-hidden="true"
-                  className="text-4xl font-serif gradient-text absolute top-4 right-4 opacity-50"
-                >
-                  "
-                </span>
-                <p className="text-sm text-slate-300 leading-relaxed mb-6 relative z-10">
+                <p className="text-sm text-slate-300 leading-relaxed mb-5 relative z-10">
                   {testimonial.quote}
                 </p>
                 <div className="flex items-center gap-3">
